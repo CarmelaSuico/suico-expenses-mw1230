@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Add Expense</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 32px 20px;
+			background: #f4f7fb;
+			color: #172033;
+			font-family: Arial, sans-serif;
+		}
+ 
+		main {
+			max-width: 650px;
+			margin: 0 auto;
+		}
+ 
+		form {
+			display: grid;
+			gap: 18px;
+			padding: 28px;
+			border: 1px solid #dbe2ee;
+			border-radius: 8px;
+			background: #ffffff;
+		}
+ 
+		h1 {
+			margin-top: 0;
+		}
+ 
+		label {
+			display: grid;
+			gap: 7px;
+			font-weight: bold;
+		}
+ 
+		input,
+		select,
+		textarea,
+		button {
+			box-sizing: border-box;
+			width: 100%;
+			padding: 11px 12px;
+			border: 1px solid #cbd5e1;
+			border-radius: 6px;
+			font: inherit;
+		}
+ 
+		textarea {
+			min-height: 110px;
+			resize: vertical;
+		}
+ 
+		.form-actions {
+			display: flex;
+			gap: 10px;
+		}
+ 
+		button {
+			border-color: #2563eb;
+			background: #2563eb;
+			color: #ffffff;
+			cursor: pointer;
+		}
+ 
+		.cancel-link {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			border: 1px solid #cbd5e1;
+			border-radius: 6px;
+			color: #172033;
+			text-decoration: none;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<form id="expense-form">
+			<div>
+				<h1 id="form-title">Add Expense</h1>
+				<p>Enter the expense details below.</p>
+			</div>
+ 
+			<label for="expense-name">
+				Expense name
+				<input id="expense-name" name="name" type="text" placeholder="e.g. Office supplies" required>
+			</label>
+ 
+			<label for="expense-amount">
+				Amount
+				<input id="expense-amount" name="amount" type="number" min="0" step="0.01" placeholder="0.00" required>
+			</label>
+ 
+			<label for="expense-category">
+				Category
+				<select id="expense-category" name="category" required>
+					<option value="">Select a category</option>
+					<option value="food">Food</option>
+					<option value="transport">Transport</option>
+					<option value="housing">Housing</option>
+					<option value="bills">Bills</option>
+					<option value="shopping">Shopping</option>
+					<option value="other">Other</option>
+				</select>
+			</label>
+ 
+			<label for="expense-date">
+				Date
+				<input id="expense-date" name="expense_date" type="date" required>
+			</label>
+ 
+			<label for="expense-notes">
+				Notes
+				<textarea id="expense-notes" name="notes" placeholder="Optional notes"></textarea>
+			</label>
+ 
+			<div class="form-actions">
+				<button type="submit">Save Expense</button>
+				<a class="cancel-link" href="expenses.html">Cancel</a>
+			</div>
+		</form>
+	</main>
+ 
+	<script>
+		const form = document.getElementById("expense-form");
+		const editId = new URLSearchParams(location.search).get("id");
+ 
+		// EDIT mode: load the existing expense into the form
+		async function loadExpense() {
+			document.getElementById("form-title").textContent = "Edit Expense";
+			document.title = "Edit Expense";
+ 
+			const response = await fetch(`/api/expenses/${editId}`);
+			if (!response.ok) {
+				alert("Expense not found");
+				location.href = "expenses.html";
+				return;
+			}
+			const e = await response.json();
+			form.name.value = e.name;
+			form.amount.value = e.amount;
+			form.category.value = e.category;
+			form.expense_date.value = e.expense_date;
+			form.notes.value = e.notes || "";
+		}
+ 
+		// CREATE or UPDATE on submit
+		form.addEventListener("submit", async (event) => {
+			event.preventDefault();
+ 
+			const expense = {
+				name: form.name.value,
+				amount: form.amount.value,
+				category: form.category.value,
+				expense_date: form.expense_date.value,
+				notes: form.notes.value
+			};
+ 
+			const response = await fetch(
+				editId ? `/api/expenses/${editId}` : "/api/expenses",
+				{
+					method: editId ? "PUT" : "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(expense)
+				}
+			);
+ 
+			const result = await response.json();
+			alert(result.message);
+			if (response.ok) location.href = "expenses.html";
+		});
+ 
+		if (editId) loadExpense();
+	</script>
+</body>
+</html>

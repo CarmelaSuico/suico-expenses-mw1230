@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses</title>
+    <style>
+        body { margin: 0; padding: 32px 20px; background: #f4f7fb; color: #172033; font-family: Arial, sans-serif; }
+        main { max-width: 1100px; margin: auto; }
+        .header, .summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .header { margin-bottom: 20px; }
+        h1 { margin: 0 0 6px; }
+        .subtitle, .summary { color: #647089; }
+        .summary { margin-bottom: 10px; }
+        a, button { padding: 9px 13px; border-radius: 6px; font: inherit; cursor: pointer; }
+        .add-button { background: #2563eb; color: white; text-decoration: none; }
+        .table-container { overflow-x: auto; background: white; border: 1px solid #dbe2ee; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        th, td { padding: 15px 16px; border-bottom: 1px solid #e5eaf2; text-align: left; }
+        th { background: #f8fafc; color: #647089; font-size: .85rem; text-transform: uppercase; }
+        tbody tr:last-child td { border-bottom: 0; }
+        .amount { font-weight: bold; }
+        .actions { display: flex; gap: 7px; }
+        .actions button, .actions a { border: 1px solid #cbd5e1; background: white; color: #172033; text-decoration: none; font-size: .9rem; }
+        .actions .delete-button { border-color: #fecaca; color: #b91c1c; }
+        .empty { padding: 40px; text-align: center; color: #647089; }
+    </style>
+</head>
+<body>
+    <main>
+        <header class="header">
+            <div><h1>Expenses</h1><p class="subtitle">View and manage your expenses.</p></div>
+            <a class="add-button" href="expenses-form.html">Add expense</a>
+        </header>
+        <div class="summary"><span id="expense-count">0 expenses</span><strong id="expense-total">Total: $0.00</strong></div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Name</th><th>Category</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
+                <tbody id="expense-table-body"></tbody>
+            </table>
+            <div id="empty-message" class="empty">No expenses yet. Add your first expense to see it here.</div>
+        </div>
+    </main>
+ 
+    <script>
+        const tbody = document.getElementById("expense-table-body");
+        const emptyMessage = document.getElementById("empty-message");
+ 
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text ?? "";
+            return div.innerHTML;
+        }
+ 
+        // READ
+        async function loadExpenses() {
+            try {
+                const response = await fetch("/api/expenses");
+                if (!response.ok) throw new Error();
+                const expenses = await response.json();
+ 
+                tbody.innerHTML = "";
+                let total = 0;
+ 
+                expenses.forEach(e => {
+                    total += Number(e.amount);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${escapeHtml(e.name)}</td>
+                            <td>${escapeHtml(e.category)}</td>
+                            <td>${escapeHtml(e.expense_date)}</td>
+                            <td class="amount">$${Number(e.amount).toFixed(2)}</td>
+                            <td class="actions">
+                                <a href="expenses-form.html?id=${e.id}">Edit</a>
+                                <button class="delete-button" onclick="deleteExpense(${e.id})">Delete</button>
+                            </td>
+                        </tr>`;
+                });
+ 
+                document.getElementById("expense-count").textContent =
+                    `${expenses.length} expense${expenses.length === 1 ? "" : "s"}`;
+                document.getElementById("expense-total").textContent = `Total: $${total.toFixed(2)}`;
+                emptyMessage.style.display = expenses.length ? "none" : "block";
+            } catch {
+                emptyMessage.textContent = "Could not load expenses. Is the server running?";
+                emptyMessage.style.display = "block";
+            }
+        }
+ 
+        // DELETE
+        async function deleteExpense(id) {
+            if (!confirm("Delete this expense?")) return;
+            const response = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+            const result = await response.json();
+            alert(result.message);
+            loadExpenses();
+        }
+ 
+        loadExpenses();
+    </script>
+</body>
+</html>

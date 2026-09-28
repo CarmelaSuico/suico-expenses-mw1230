@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise: Static Frontend</title>
+    <style>
+        :root {
+            color: #172033;
+            background: #f4f7fb;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 24px 24px;
+            box-sizing: border-box;
+            background: #f4f7fb;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 28px;
+            color: #172033;
+            font-size: 50px;
+        }
+
+        a {
+            display: inline-block;
+            margin: 6px 4px;
+            text-decoration: none;
+        }
+
+        button {
+            min-width: 150px;
+            padding: 12px 20px;
+            border: 0;
+            border-radius: 7px;
+            background: #2563eb;
+            color: #ffffff;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        button:focus-visible {
+            outline: 3px solid #93c5fd;
+            outline-offset: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <a href="expenses.html"> <button type="button">Expenses</button> </a>
+    <a href="expenses-form.html"> <button type="button">Add Expenses</button> </a>
+</body>
+
+<script>
+
+
+        // ========================================
+        // GET - Retrieve Students
+        // ========================================
+
+        async function loadStudents() {
+
+            const response =
+                await fetch("/api/students");
+
+
+            const students =
+                await response.json();
+
+
+            const table =
+                document.getElementById(
+                    "studentTable"
+                );
+
+
+            table.innerHTML = "";
+
+
+            students.forEach(student => {
+
+                const row = `
+                    <tr>
+
+                        <td>${student.id}</td>
+
+                        <td>${student.name}</td>
+
+                        <td>${student.course}</td>
+
+                        <td>${student.year_level}</td>
+
+                    </tr>
+                `;
+
+
+                table.innerHTML += row;
+
+            });
+
+        }
+
+
+        // ========================================
+        // POST - Insert Student
+        // ========================================
+
+        async function addStudent() {
+
+            const name =
+                document.getElementById(
+                    "name"
+                ).value;
+
+
+            const course =
+                document.getElementById(
+                    "course"
+                ).value;
+
+
+            const year_level =
+                document.getElementById(
+                    "yearLevel"
+                ).value;
+
+
+            const student = {
+
+                name: name,
+
+                course: course,
+
+                year_level: year_level
+
+            };
+
+
+            const response =
+                await fetch(
+                    "/api/students",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(student)
+
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            alert(result.message);
+
+
+            // Clear inputs
+
+            document.getElementById(
+                "name"
+            ).value = "";
+
+            document.getElementById(
+                "course"
+            ).value = "";
+
+            document.getElementById(
+                "yearLevel"
+            ).value = "";
+
+
+            // Refresh list
+
+            loadStudents();
+
+        }
+
+
+        // Load students when page opens
+        loadStudents();
+
+    </script>
+</html>
+
+
